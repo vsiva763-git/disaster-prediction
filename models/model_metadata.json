@@ -1,0 +1,20 @@
+{
+  "model_type": "Binary CNN-LSTM with Focal Loss",
+  "input_shape": [
+    24,
+    32
+  ],
+  "output": "Binary classification (tsunami/no-tsunami)",
+  "threshold": 0.1,
+  "validation_auc": 1.0,
+  "validation_recall": 0.9723270440251572,
+  "validation_precision": 1.0,
+  "test_auc": 1.0,
+  "test_recall": 1.0,
+  "test_precision": 1.0,
+  "focal_loss_gamma": 2.0,
+  "focal_loss_alpha": 0.25,
+  "training_samples": 8000,
+  "positive_class_ratio": 0.39775,
+  "platform": "Kaggle GPU"
+}

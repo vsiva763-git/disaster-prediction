@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Alert System - Tsunami Warning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            color: #4ecdc4;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 .icon {
+            font-size: 1.5em;
+        }
+
+        /* Device Management Section */
+        .device-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .device-form input {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1em;
+        }
+
+        .device-form input::placeholder {
+            color: #666;
+        }
+
+        .device-form button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .device-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .device-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border-left: 4px solid #4ecdc4;
+        }
+
+        .device-item.offline {
+            border-left-color: #ff6b6b;
+            opacity: 0.7;
+        }
+
+        .device-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .device-name {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .device-ip {
+            color: #888;
+            font-family: monospace;
+        }
+
+        .device-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ecdc4;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: #ff6b6b;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .device-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-test {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-alert {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-clear {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-remove {
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+        }
+
+        /* Alert Control Panel */
+        .alert-control {
+            margin-top: 20px;
+        }
+
+        .alert-levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-level-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .alert-level-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .alert-level-btn.watch {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .alert-level-btn.advisory {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .alert-level-btn.warning {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        .alert-level-btn.critical {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            animation: criticalPulse 1s infinite;
+        }
+
+        @keyframes criticalPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            50% { box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); }
+        }
+
+        .custom-message {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        /* Test Data Section */
+        .test-data-section {
+            margin-top: 30px;
+        }
+
+        .earthquake-input {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-size: 0.85em;
+            color: #888;
+        }
+
+        .input-group input, .input-group select {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+        }
+
+        /* Alert Log Section */
+        .alert-log {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border-left: 3px solid #4ecdc4;
+        }
+
+        .log-entry.error {
+            border-left-color: #e74c3c;
+        }
+
+        .log-entry.success {
+            border-left-color: #2ecc71;
+        }
+
+        .log-entry .time {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .log-entry .message {
+            margin-top: 5px;
+        }
+
+        /* Status Cards */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-card {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .status-card .value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #4ecdc4;
+        }
+
+        .status-card .label {
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Clear All Button */
+        .clear-all-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .btn-clear-all {
+            padding: 15px 40px;
+            border: 2px solid #2ecc71;
+            background: transparent;
+            color: #2ecc71;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-clear-all:hover {
+            background: #2ecc71;
+            color: white;
+        }
+
+        /* Hardware Setup Section */
+        .hardware-diagram {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .connection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .connection-table th, .connection-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .connection-table th {
+            color: #4ecdc4;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Modal for alerts */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal h3 {
+            color: #4ecdc4;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌊 IoT Alert System</h1>
+            <p class="subtitle">Tsunami Early Warning - ESP8266 Device Management</p>
+        </header>
+
+        <!-- Status Overview -->
+        <div class="status-grid">
+            <div class="status-card">
+                <div class="value" id="deviceCount">0</div>
+                <div class="label">Registered Devices</div>
+            </div>
+            <div class="status-card">
+                <div class="value" id="onlineCount">0</div>
+                <div class="label">Online Devices</div>
+            </div>
+            <div class="status-card">
+                <div class="value" id="alertsSent">0</div>
+                <div class="label">Alerts Sent Today</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Column - Device Management -->
+            <div class="left-column">
+                <div class="card">
+                    <h2><span class="icon">📡</span> Device Management</h2>
+                    
+                    <div class="device-form">
+                        <input type="text" id="deviceName" placeholder="Device Name (e.g., Office)">
+                        <input type="text" id="deviceIP" placeholder="ESP8266 IP (e.g., 192.168.1.100)">
+                        <button onclick="addDevice()">Add Device</button>
+                    </div>
+
+                    <div class="device-list" id="deviceList">
+                        <p style="color: #666; text-align: center; padding: 20px;">
+                            No devices registered yet. Add your ESP8266 IP address above.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h2><span class="icon">📋</span> Alert Log</h2>
+                    <div class="alert-log" id="alertLog">
+                        <p style="color: #666; text-align: center;">No alerts sent yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Alert Control & Test Data -->
+            <div class="right-column">
+                <div class="card">
+                    <h2><span class="icon">🚨</span> Alert Control Panel</h2>
+                    
+                    <input type="text" class="custom-message" id="alertMessage" 
+                           placeholder="Custom alert message (optional)">
+                    
+                    <div class="alert-levels">
+                        <button class="alert-level-btn watch" onclick="sendAlert(1)">
+                            📢 WATCH
+                        </button>
+                        <button class="alert-level-btn advisory" onclick="sendAlert(2)">
+                            ⚠️ ADVISORY
+                        </button>
+                        <button class="alert-level-btn warning" onclick="sendAlert(3)">
+                            🔴 WARNING
+                        </button>
+                        <button class="alert-level-btn critical" onclick="sendAlert(4)">
+                            🆘 CRITICAL
+                        </button>
+                    </div>
+
+                    <div class="clear-all-section">
+                        <button class="btn-clear-all" onclick="clearAllAlerts()">
+                            ✓ Clear All Alerts
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cloud Mode Alert Panel -->
+                <div class="card" style="background: linear-gradient(135deg, rgba(39, 174, 96, 0.1), rgba(46, 204, 113, 0.05)); border: 1px solid rgba(39, 174, 96, 0.3);">
+                    <h2 style="color: #27ae60;"><span class="icon">☁️</span> Cloud Mode Alerts</h2>
+                    <p style="color: #888; font-size: 0.9em; margin-bottom: 15px;">
+                        For ESP8266 devices using <strong>Cloud Mode</strong> (polling). Works with cloud deployments!
+                    </p>
+                    
+                    <div class="alert-levels" style="margin-bottom: 15px;">
+                        <button class="alert-level-btn watch" onclick="sendCloudAlert(1)" style="background: linear-gradient(135deg, #f1c40f, #27ae60);">
+                            ☁️ WATCH
+                        </button>
+                        <button class="alert-level-btn advisory" onclick="sendCloudAlert(2)" style="background: linear-gradient(135deg, #e67e22, #27ae60);">
+                            ☁️ ADVISORY
+                        </button>
+                        <button class="alert-level-btn warning" onclick="sendCloudAlert(3)" style="background: linear-gradient(135deg, #e74c3c, #27ae60);">
+                            ☁️ WARNING
+                        </button>
+                        <button class="alert-level-btn critical" onclick="sendCloudAlert(4)" style="background: linear-gradient(135deg, #c0392b, #27ae60);">
+                            ☁️ CRITICAL
+                        </button>
+                    </div>
+                    
+                    <button class="btn-clear-all" onclick="clearCloudAlert()" style="background: #27ae60;">
+                        ✓ Clear Cloud Alert
+                    </button>
+                    
+                    <div id="cloudStatus" style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85em;">
+                        <strong>Status:</strong> <span id="cloudAlertStatus">Checking...</span>
+                    </div>
+                </div>
+
+                <div class="card test-data-section">
+                    <h2><span class="icon">🌊</span> Test Tsunami Prediction</h2>
+                    <p style="color: #888; margin-bottom: 15px;">
+                        Enter seismic data to predict tsunami risk using AI model & trigger IoT alerts
+                    </p>
+
+                    <div style="background: rgba(78, 205, 196, 0.1); border: 1px solid rgba(78, 205, 196, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                        <strong>🤖 AI Model:</strong> CNN-LSTM analyzes seismic data → Predicts tsunami probability → Triggers IoT alerts
+                    </div>
+
+                    <h4 style="color: #4ecdc4; margin-bottom: 10px;">📍 Seismic Event Parameters:</h4>
+                    <div class="earthquake-input">
+                        <div class="input-group">
+                            <label>Magnitude (Richter)</label>
+                            <input type="number" id="testMagnitude" value="7.2" min="4" max="10" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Depth (km)</label>
+                            <input type="number" id="testDepth" value="25" min="1" max="700">
+                        </div>
+                        <div class="input-group">
+                            <label>Epicenter Lat</label>
+                            <input type="number" id="testLat" value="6.5" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Epicenter Lon</label>
+                            <input type="number" id="testLon" value="92.8" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Ocean Region</label>
+                            <select id="testRegion">
+                                <option value="andaman">Andaman Sea</option>
+                                <option value="sumatra">Sumatra</option>
+                                <option value="makran">Makran Coast</option>
+                                <option value="bay_bengal">Bay of Bengal</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-alert" style="width: 100%; padding: 15px; font-size: 1.1em;" 
+                            onclick="runTsunamiPrediction()">
+                        🌊 Predict Tsunami Risk & Send IoT Alerts
+                    </button>
+
+                    <!-- Prediction Result Display -->
+                    <div id="predictionResult" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 0.9em; color: #888;">AI Tsunami Risk Prediction</div>
+                        <div id="predictionValue" style="font-size: 2.5em; font-weight: 700; margin: 10px 0;"></div>
+                        <div id="predictionLevel" style="font-size: 1.2em; font-weight: 600;"></div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h2><span class="icon">🔧</span> Hardware Setup & Code Generator</h2>
+                    
+                    <h3 style="color: #888; margin: 15px 0 10px;">Components Required:</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 5px 0;">✅ Arduino UNO</li>
+                        <li style="padding: 5px 0;">✅ ESP8266 (NodeMCU or Wemos D1)</li>
+                        <li style="padding: 5px 0;">✅ LCD 16x2 (without I2C, 4-bit mode)</li>
+                        <li style="padding: 5px 0;">✅ Active Buzzer</li>
+                        <li style="padding: 5px 0;">✅ 10kΩ Potentiometer (LCD contrast)</li>
+                        <li style="padding: 5px 0;">✅ Resistors: 1kΩ, 2kΩ (voltage divider)</li>
+                    </ul>
+
+                    <!-- Pin Configuration Section -->
+                    <div style="background: rgba(78, 205, 196, 0.1); border: 1px solid rgba(78, 205, 196, 0.3); border-radius: 10px; padding: 15px; margin: 20px 0;">
+                        <h3 style="color: #4ecdc4; margin-bottom: 15px;">⚙️ Customize Pin Configuration</h3>
+                        <p style="color: #888; margin-bottom: 15px; font-size: 0.9em;">
+                            Modify pins below to match your wiring. Code will be generated with your custom configuration.
+                        </p>
+
+                        <!-- Arduino UNO Pins -->
+                        <h4 style="color: #f39c12; margin: 15px 0 10px;">🔌 Arduino UNO Pins</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
+                            <div class="input-group">
+                                <label>LCD RS</label>
+                                <input type="number" id="pinLcdRs" value="12" min="2" max="13" class="pin-input">
+                            </div>
+                            <div class="input-group">
+                                <label>LCD EN</label>
+                                <input type="number" id="pinLcdEn" value="11" min="2" max="13" class="pin-input">
+                            </div>
+                            <div class="input-group">
+                                <label>LCD D4</label>
+                                <input type="number" id="pinLcdD4" value="5" min="2" max="13" class="pin-input">
+                            </div>
+                            <div class="input-group">
+                                <label>LCD D5</label>
+                                <input type="number" id="pinLcdD5" value="4" min="2" max="13" class="pin-input">
+                            </div>
+                            <div class="input-group">
+                                <label>LCD D6</label>
+                                <input type="number" id="pinLcdD6" value="3" min="2" max="13" class="pin-input">
+                            </div>
+                            <div class="input-group">
+                                <label>LCD D7</label>
+                                <input type="number" id="pinLcdD7" value="2" min="2" max="13" class="pin-input">
+                            </div>
+                            <div class="input-group">
+                                <label>Buzzer</label>
+                                <input type="number" id="pinBuzzer" value="8" min="2" max="13" class="pin-input">
+                            </div>
+                            <div class="input-group">
+                                <label>ESP RX</label>
+                                <input type="number" id="pinEspRx" value="6" min="2" max="13" class="pin-input">
+                            </div>
+                            <div class="input-group">
+                                <label>ESP TX</label>
+                                <input type="number" id="pinEspTx" value="7" min="2" max="13" class="pin-input">
+                            </div>
+                        </div>
+
+                        <!-- ESP8266 Configuration -->
+                        <h4 style="color: #9b59b6; margin: 20px 0 10px;">📶 ESP8266 WiFi Configuration</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+                            <div class="input-group">
+                                <label>WiFi SSID</label>
+                                <input type="text" id="wifiSsid" value="YOUR_WIFI_SSID" class="pin-input" style="width: 100%;">
+                            </div>
+                            <div class="input-group">
+                                <label>WiFi Password</label>
+                                <input type="password" id="wifiPassword" value="YOUR_WIFI_PASSWORD" class="pin-input" style="width: 100%;">
+                            </div>
+                            <div class="input-group">
+                                <label>Device Name</label>
+                                <input type="text" id="espDeviceName" value="TsunamiAlert_01" class="pin-input" style="width: 100%;">
+                            </div>
+                        </div>
+
+                        <!-- Cloud Mode Configuration -->
+                        <div style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(39, 174, 96, 0.1)); border: 2px solid #27ae60; border-radius: 10px; padding: 15px; margin-top: 20px;">
+                            <h4 style="color: #27ae60; margin: 0 0 10px;">☁️ Cloud Mode (For Remote Server)</h4>
+                            <p style="color: #888; font-size: 0.85em; margin-bottom: 15px;">
+                                Use this if your server runs in the cloud (Codespace, Heroku, Railway).<br>
+                                ESP8266 will <strong>poll</strong> the server for alerts instead of receiving direct connections.
+                            </p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                                <div class="input-group">
+                                    <label>Server URL</label>
+                                    <input type="text" id="cloudServerUrl" value="https://your-server.com" class="pin-input" style="width: 100%;" placeholder="https://...">
+                                </div>
+                                <div class="input-group">
+                                    <label>Poll Interval (ms)</label>
+                                    <input type="number" id="cloudPollInterval" value="5000" min="1000" max="60000" class="pin-input" style="width: 100%;">
+                                </div>
+                            </div>
+                            <button onclick="downloadEsp8266CloudCode()" class="btn" style="margin-top: 15px; background: linear-gradient(135deg, #27ae60, #2ecc71); width: 100%; padding: 12px;">
+                                ☁️ Download ESP8266 Cloud Code
+                            </button>
+                        </div>
+
+                        <button onclick="resetPinsToDefault()" class="btn" style="margin-top: 15px; background: rgba(255,255,255,0.1); color: #888;">
+                            🔄 Reset to Defaults
+                        </button>
+                    </div>
+
+                    <!-- Wiring Table (Dynamic) -->
+                    <h3 style="color: #888; margin: 15px 0 10px;">📋 Your Wiring Configuration:</h3>
+                    <table class="connection-table" id="wiringTable">
+                        <tr><th>Component</th><th>Pin</th><th>Description</th></tr>
+                        <tr><td>LCD RS</td><td id="tableRs">12</td><td>Register Select</td></tr>
+                        <tr><td>LCD EN</td><td id="tableEn">11</td><td>Enable</td></tr>
+                        <tr><td>LCD D4</td><td id="tableD4">5</td><td>Data bit 4</td></tr>
+                        <tr><td>LCD D5</td><td id="tableD5">4</td><td>Data bit 5</td></tr>
+                        <tr><td>LCD D6</td><td id="tableD6">3</td><td>Data bit 6</td></tr>
+                        <tr><td>LCD D7</td><td id="tableD7">2</td><td>Data bit 7</td></tr>
+                        <tr><td>Buzzer</td><td id="tableBuzzer">8</td><td>Alert sound</td></tr>
+                        <tr><td>ESP8266 RX</td><td id="tableEspRx">6</td><td>SoftwareSerial RX</td></tr>
+                        <tr><td>ESP8266 TX</td><td id="tableEspTx">7</td><td>SoftwareSerial TX</td></tr>
+                    </table>
+
+                    <!-- Download Buttons -->
+                    <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="downloadArduinoCode()" class="btn btn-test" style="flex: 1; min-width: 200px; padding: 15px;">
+                            📥 Download Arduino Code (Custom Pins)
+                        </button>
+                        <button onclick="downloadEsp8266Code()" class="btn btn-test" style="flex: 1; min-width: 200px; padding: 15px; background: #9b59b6;">
+                            📥 Download ESP8266 Code (Local Mode)
+                        </button>
+                    </div>
+                    
+                    <p style="color: #888; font-size: 0.85em; margin-top: 10px; text-align: center;">
+                        💡 <strong>Local Mode:</strong> Server connects to ESP8266 IP directly (same network only)<br>
+                        💡 <strong>Cloud Mode:</strong> ESP8266 polls server (works from anywhere)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Device storage
+        let devices = JSON.parse(localStorage.getItem('tsunamiDevices')) || [];
+        let alertsSentToday = parseInt(localStorage.getItem('alertsSentToday')) || 0;
+        let alertLog = [];
+
+        // Default pin configuration
+        const defaultPins = {
+            lcdRs: 12, lcdEn: 11, lcdD4: 5, lcdD5: 4, lcdD6: 3, lcdD7: 2,
+            buzzer: 8, espRx: 6, espTx: 7
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDevices();
+            updateStats();
+            checkAllDevices();
+            loadSavedPinConfig();
+            setupPinChangeListeners();
+            checkCloudStatus();
+            
+            // Check devices every 30 seconds
+            setInterval(checkAllDevices, 30000);
+            // Check cloud status every 5 seconds
+            setInterval(checkCloudStatus, 5000);
+        });
+
+        function checkCloudStatus() {
+            fetch('/iot/cloud/status')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const statusEl = document.getElementById('cloudAlertStatus');
+                    if (data.active) {
+                        const levelNames = {1: 'WATCH', 2: 'ADVISORY', 3: 'WARNING', 4: 'CRITICAL'};
+                        statusEl.innerHTML = `<span style="color: #e74c3c;">🔴 ACTIVE - Level ${data.level} (${levelNames[data.level] || 'Alert'}): ${data.message}</span>`;
+                    } else {
+                        statusEl.innerHTML = `<span style="color: #27ae60;">✅ No active alert</span>`;
+                    }
+                })
+                .catch(err => {
+                    console.error('Cloud status error:', err);
+                    document.getElementById('cloudAlertStatus').innerHTML = `<span style="color: #f39c12;">⚠️ Connection error - retrying...</span>`;
+                });
+        }
+
+        function saveDevices() {
+            localStorage.setItem('tsunamiDevices', JSON.stringify(devices));
+        }
+
+        function addDevice() {
+            const name = document.getElementById('deviceName').value.trim();
+            const ip = document.getElementById('deviceIP').value.trim();
+
+            if (!name || !ip) {
+                addLog('Please enter both device name and IP address', 'error');
+                return;
+            }
+
+            // Validate IP format
+            const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipRegex.test(ip)) {
+                addLog('Invalid IP address format', 'error');
+                return;
+            }
+
+            // Check if device already exists
+            if (devices.find(d => d.ip === ip)) {
+                addLog('Device with this IP already exists', 'error');
+                return;
+            }
+
+            devices.push({
+                id: Date.now(),
+                name: name,
+                ip: ip,
+                online: false,
+                lastSeen: null
+            });
+
+            saveDevices();
+            renderDevices();
+            checkDevice(devices[devices.length - 1]);
+
+            document.getElementById('deviceName').value = '';
+            document.getElementById('deviceIP').value = '';
+
+            addLog(`Device "${name}" added (${ip})`, 'success');
+        }
+
+        function removeDevice(id) {
+            devices = devices.filter(d => d.id !== id);
+            saveDevices();
+            renderDevices();
+            updateStats();
+        }
+
+        function renderDevices() {
+            const container = document.getElementById('deviceList');
+            
+            if (devices.length === 0) {
+                container.innerHTML = `
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        No devices registered yet. Add your ESP8266 IP address above.
+                    </p>`;
+                return;
+            }
+
+            container.innerHTML = devices.map(device => `
+                <div class="device-item ${device.online ? '' : 'offline'}">
+                    <div class="device-info">
+                        <span class="device-name">${device.name}</span>
+                        <span class="device-ip">${device.ip}</span>
+                    </div>
+                    <div class="device-status">
+                        <span class="status-dot ${device.online ? '' : 'offline'}"></span>
+                        <span>${device.online ? 'Online' : 'Offline'}</span>
+                    </div>
+                    <div class="device-actions">
+                        <button class="btn btn-test" onclick="testDevice('${device.ip}')">Test</button>
+                        <button class="btn btn-clear" onclick="clearDevice('${device.ip}')">Clear</button>
+                        <button class="btn btn-remove" onclick="removeDevice(${device.id})">✕</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateStats();
+        }
+
+        async function checkDevice(device) {
+            try {
+                const response = await fetch(`http://${device.ip}/health`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    timeout: 3000
+                });
+                
+                if (response.ok) {
+                    device.online = true;
+                    device.lastSeen = new Date().toISOString();
+                } else {
+                    device.online = false;
+                }
+            } catch (e) {
+                device.online = false;
+            }
+            
+            saveDevices();
+            renderDevices();
+        }
+
+        async function checkAllDevices() {
+            for (const device of devices) {
+                await checkDevice(device);
+            }
+        }
+
+        async function testDevice(ip) {
+            try {
+                addLog(`Testing device at ${ip}...`, 'info');
+                
+                const response = await fetch(`http://${ip}/test`, {
+                    method: 'POST',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    addLog(`Test sent to ${ip} - Check LCD and buzzer`, 'success');
+                } else {
+                    addLog(`Test failed for ${ip}`, 'error');
+                }
+            } catch (e) {
+                addLog(`Cannot reach device at ${ip}`, 'error');
+            }
+        }
+
+        async function clearDevice(ip) {
+            try {
+                const response = await fetch(`http://${ip}/clear`, {
+                    method: 'POST',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    addLog(`Alert cleared on ${ip}`, 'success');
+                } else {
+                    addLog(`Failed to clear alert on ${ip}`, 'error');
+                }
+            } catch (e) {
+                addLog(`Cannot reach device at ${ip}`, 'error');
+            }
+        }
+
+        async function sendAlert(level) {
+            const message = document.getElementById('alertMessage').value || getDefaultMessage(level);
+            const levelNames = ['NONE', 'WATCH', 'ADVISORY', 'WARNING', 'CRITICAL'];
+            
+            const onlineDevices = devices.filter(d => d.online);
+            
+            if (onlineDevices.length === 0) {
+                addLog('No online devices to send alert to', 'error');
+                return;
+            }
+
+            addLog(`Sending ${levelNames[level]} alert to ${onlineDevices.length} device(s)...`, 'info');
+
+            // Send to all online devices
+            for (const device of onlineDevices) {
+                try {
+                    const response = await fetch(`http://${device.ip}/alert`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            level: level,
+                            message: message,
+                            earthquake: 'Manual Alert'
+                        }),
+                        mode: 'cors'
+                    });
+                    
+                    if (response.ok) {
+                        addLog(`Alert sent to ${device.name} (${device.ip})`, 'success');
+                        alertsSentToday++;
+                    } else {
+                        addLog(`Failed to send to ${device.name}`, 'error');
+                    }
+                } catch (e) {
+                    addLog(`Cannot reach ${device.name} (${device.ip})`, 'error');
+                }
+            }
+
+            // Also send to backend for logging
+            try {
+                await fetch('/iot/alert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        level: level,
+                        message: message,
+                        devices: onlineDevices.map(d => d.ip)
+                    })
+                });
+            } catch (e) {
+                console.log('Backend logging failed');
+            }
+
+            localStorage.setItem('alertsSentToday', alertsSentToday);
+            updateStats();
+        }
+
+        async function clearAllAlerts() {
+            const onlineDevices = devices.filter(d => d.online);
+            
+            addLog(`Clearing alerts on ${onlineDevices.length} device(s)...`, 'info');
+
+            for (const device of onlineDevices) {
+                await clearDevice(device.ip);
+            }
+
+            addLog('All alerts cleared', 'success');
+        }
+
+        async function runTsunamiPrediction() {
+            const magnitude = parseFloat(document.getElementById('testMagnitude').value);
+            const depth = parseFloat(document.getElementById('testDepth').value);
+            const lat = parseFloat(document.getElementById('testLat').value);
+            const lon = parseFloat(document.getElementById('testLon').value);
+            const region = document.getElementById('testRegion').value;
+
+            const regionNames = {
+                'andaman': 'Andaman Sea',
+                'sumatra': 'Sumatra',
+                'makran': 'Makran Coast',
+                'bay_bengal': 'Bay of Bengal'
+            };
+
+            addLog(`🌊 Running AI tsunami prediction for M${magnitude} event in ${regionNames[region]}...`, 'info');
+
+            // Show loading state
+            const resultDiv = document.getElementById('predictionResult');
+            const valueDiv = document.getElementById('predictionValue');
+            const levelDiv = document.getElementById('predictionLevel');
+            resultDiv.style.display = 'block';
+            resultDiv.style.background = 'rgba(0,0,0,0.3)';
+            valueDiv.textContent = '...';
+            valueDiv.style.color = '#888';
+            levelDiv.textContent = 'Analyzing seismic data...';
+            levelDiv.style.color = '#888';
+
+            // Send to prediction endpoint
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        magnitude: magnitude,
+                        depth: depth,
+                        latitude: lat,
+                        longitude: lon
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.prediction) {
+                    const risk = data.prediction.tsunami_probability;
+                    const riskPercent = (risk * 100).toFixed(1);
+                    
+                    // Update result display
+                    valueDiv.textContent = `${riskPercent}%`;
+                    
+                    // Determine alert level and styling based on risk
+                    let alertLevel = 0;
+                    let levelName = 'LOW RISK';
+                    let bgColor = 'rgba(46, 204, 113, 0.2)';
+                    let textColor = '#2ecc71';
+                    
+                    if (risk > 0.9) {
+                        alertLevel = 4;
+                        levelName = '🆘 CRITICAL - EVACUATE';
+                        bgColor = 'rgba(231, 76, 60, 0.3)';
+                        textColor = '#e74c3c';
+                    } else if (risk > 0.75) {
+                        alertLevel = 3;
+                        levelName = '🔴 HIGH RISK - WARNING';
+                        bgColor = 'rgba(231, 76, 60, 0.2)';
+                        textColor = '#e74c3c';
+                    } else if (risk > 0.5) {
+                        alertLevel = 2;
+                        levelName = '⚠️ MODERATE RISK - ADVISORY';
+                        bgColor = 'rgba(243, 156, 18, 0.2)';
+                        textColor = '#f39c12';
+                    } else if (risk > 0.3) {
+                        alertLevel = 1;
+                        levelName = '📢 ELEVATED - WATCH';
+                        bgColor = 'rgba(243, 156, 18, 0.15)';
+                        textColor = '#f1c40f';
+                    }
+                    
+                    resultDiv.style.background = bgColor;
+                    valueDiv.style.color = textColor;
+                    levelDiv.textContent = levelName;
+                    levelDiv.style.color = textColor;
+                    
+                    addLog(`🌊 AI PREDICTION: ${riskPercent}% TSUNAMI RISK - ${levelName}`, risk > 0.5 ? 'error' : 'success');
+
+                    if (alertLevel > 0) {
+                        const message = `TSUNAMI ${levelName.split(' ')[0]} M${magnitude} ${regionNames[region]}`;
+                        document.getElementById('alertMessage').value = message;
+                        
+                        // Auto-send alert to IoT devices
+                        addLog(`📡 Sending ${levelName} to IoT devices...`, 'info');
+                        await sendAlert(alertLevel);
+                    } else {
+                        addLog('✅ Risk below threshold - No alert triggered', 'success');
+                    }
+                } else {
+                    throw new Error('No prediction returned');
+                }
+            } catch (e) {
+                valueDiv.textContent = 'ERROR';
+                valueDiv.style.color = '#e74c3c';
+                levelDiv.textContent = 'Prediction failed';
+                levelDiv.style.color = '#e74c3c';
+                resultDiv.style.background = 'rgba(231, 76, 60, 0.1)';
+                addLog('❌ Prediction failed: ' + e.message, 'error');
+            }
+        }
+
+        function getDefaultMessage(level) {
+            const messages = {
+                1: 'Tsunami Watch',
+                2: 'Tsunami Advisory',
+                3: 'Tsunami Warning!',
+                4: 'EVACUATE NOW!'
+            };
+            return messages[level] || 'Alert';
+        }
+
+        // ========== PIN CONFIGURATION FUNCTIONS ==========
+        
+        function loadSavedPinConfig() {
+            const savedConfig = localStorage.getItem('pinConfig');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                document.getElementById('pinLcdRs').value = config.lcdRs || defaultPins.lcdRs;
+                document.getElementById('pinLcdEn').value = config.lcdEn || defaultPins.lcdEn;
+                document.getElementById('pinLcdD4').value = config.lcdD4 || defaultPins.lcdD4;
+                document.getElementById('pinLcdD5').value = config.lcdD5 || defaultPins.lcdD5;
+                document.getElementById('pinLcdD6').value = config.lcdD6 || defaultPins.lcdD6;
+                document.getElementById('pinLcdD7').value = config.lcdD7 || defaultPins.lcdD7;
+                document.getElementById('pinBuzzer').value = config.buzzer || defaultPins.buzzer;
+                document.getElementById('pinEspRx').value = config.espRx || defaultPins.espRx;
+                document.getElementById('pinEspTx').value = config.espTx || defaultPins.espTx;
+            }
+            const savedWifi = localStorage.getItem('wifiConfig');
+            if (savedWifi) {
+                const wifi = JSON.parse(savedWifi);
+                document.getElementById('wifiSsid').value = wifi.ssid || 'YOUR_WIFI_SSID';
+                document.getElementById('wifiPassword').value = wifi.password || 'YOUR_WIFI_PASSWORD';
+                document.getElementById('espDeviceName').value = wifi.deviceName || 'TsunamiAlert_01';
+            }
+            updateWiringTable();
+        }
+
+        function setupPinChangeListeners() {
+            const pinInputs = document.querySelectorAll('.pin-input');
+            pinInputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    savePinConfig();
+                    updateWiringTable();
+                });
+            });
+        }
+
+        function savePinConfig() {
+            const config = {
+                lcdRs: parseInt(document.getElementById('pinLcdRs').value),
+                lcdEn: parseInt(document.getElementById('pinLcdEn').value),
+                lcdD4: parseInt(document.getElementById('pinLcdD4').value),
+                lcdD5: parseInt(document.getElementById('pinLcdD5').value),
+                lcdD6: parseInt(document.getElementById('pinLcdD6').value),
+                lcdD7: parseInt(document.getElementById('pinLcdD7').value),
+                buzzer: parseInt(document.getElementById('pinBuzzer').value),
+                espRx: parseInt(document.getElementById('pinEspRx').value),
+                espTx: parseInt(document.getElementById('pinEspTx').value)
+            };
+            localStorage.setItem('pinConfig', JSON.stringify(config));
+            
+            const wifiConfig = {
+                ssid: document.getElementById('wifiSsid').value,
+                password: document.getElementById('wifiPassword').value,
+                deviceName: document.getElementById('espDeviceName').value
+            };
+            localStorage.setItem('wifiConfig', JSON.stringify(wifiConfig));
+        }
+
+        function updateWiringTable() {
+            document.getElementById('tableRs').textContent = document.getElementById('pinLcdRs').value;
+            document.getElementById('tableEn').textContent = document.getElementById('pinLcdEn').value;
+            document.getElementById('tableD4').textContent = document.getElementById('pinLcdD4').value;
+            document.getElementById('tableD5').textContent = document.getElementById('pinLcdD5').value;
+            document.getElementById('tableD6').textContent = document.getElementById('pinLcdD6').value;
+            document.getElementById('tableD7').textContent = document.getElementById('pinLcdD7').value;
+            document.getElementById('tableBuzzer').textContent = document.getElementById('pinBuzzer').value;
+            document.getElementById('tableEspRx').textContent = document.getElementById('pinEspRx').value;
+            document.getElementById('tableEspTx').textContent = document.getElementById('pinEspTx').value;
+        }
+
+        function resetPinsToDefault() {
+            document.getElementById('pinLcdRs').value = defaultPins.lcdRs;
+            document.getElementById('pinLcdEn').value = defaultPins.lcdEn;
+            document.getElementById('pinLcdD4').value = defaultPins.lcdD4;
+            document.getElementById('pinLcdD5').value = defaultPins.lcdD5;
+            document.getElementById('pinLcdD6').value = defaultPins.lcdD6;
+            document.getElementById('pinLcdD7').value = defaultPins.lcdD7;
+            document.getElementById('pinBuzzer').value = defaultPins.buzzer;
+            document.getElementById('pinEspRx').value = defaultPins.espRx;
+            document.getElementById('pinEspTx').value = defaultPins.espTx;
+            document.getElementById('wifiSsid').value = 'YOUR_WIFI_SSID';
+            document.getElementById('wifiPassword').value = 'YOUR_WIFI_PASSWORD';
+            document.getElementById('espDeviceName').value = 'TsunamiAlert_01';
+            savePinConfig();
+            updateWiringTable();
+            addLog('Pin configuration reset to defaults', 'success');
+        }
+
+        function downloadArduinoCode() {
+            const pins = {
+                lcdRs: document.getElementById('pinLcdRs').value,
+                lcdEn: document.getElementById('pinLcdEn').value,
+                lcdD4: document.getElementById('pinLcdD4').value,
+                lcdD5: document.getElementById('pinLcdD5').value,
+                lcdD6: document.getElementById('pinLcdD6').value,
+                lcdD7: document.getElementById('pinLcdD7').value,
+                buzzer: document.getElementById('pinBuzzer').value,
+                espRx: document.getElementById('pinEspRx').value,
+                espTx: document.getElementById('pinEspTx').value
+            };
+            
+            const url = `/iot/arduino/generate?` + new URLSearchParams(pins).toString();
+            
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'arduino_uno_tsunami_alert.ino';
+                    a.click();
+                    addLog('Arduino code downloaded with custom pins', 'success');
+                })
+                .catch(err => {
+                    addLog('Failed to download Arduino code: ' + err.message, 'error');
+                });
+        }
+
+        function downloadEsp8266Code() {
+            const config = {
+                ssid: document.getElementById('wifiSsid').value,
+                password: document.getElementById('wifiPassword').value,
+                deviceName: document.getElementById('espDeviceName').value
+            };
+            
+            const url = `/iot/esp8266/generate?` + new URLSearchParams(config).toString();
+            
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'esp8266_tsunami_alert.ino';
+                    a.click();
+                    addLog('ESP8266 code downloaded with custom WiFi config', 'success');
+                })
+                .catch(err => {
+                    addLog('Failed to download ESP8266 code: ' + err.message, 'error');
+                });
+        }
+
+        function downloadEsp8266CloudCode() {
+            const config = {
+                ssid: document.getElementById('wifiSsid').value,
+                password: document.getElementById('wifiPassword').value,
+                deviceName: document.getElementById('espDeviceName').value,
+                serverUrl: document.getElementById('cloudServerUrl').value,
+                pollInterval: document.getElementById('cloudPollInterval').value
+            };
+            
+            // Validate server URL
+            if (!config.serverUrl || config.serverUrl === 'https://your-server.com') {
+                addLog('Please enter your cloud server URL', 'error');
+                alert('Please enter your cloud server URL!\n\nExample:\n- https://your-codespace-5000.app.github.dev\n- https://your-app.herokuapp.com');
+                return;
+            }
+            
+            const url = `/iot/esp8266/cloud/generate?` + new URLSearchParams(config).toString();
+            
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'esp8266_cloud_tsunami_alert.ino';
+                    a.click();
+                    addLog('ESP8266 CLOUD code downloaded - device will poll: ' + config.serverUrl, 'success');
+                })
+                .catch(err => {
+                    addLog('Failed to download ESP8266 cloud code: ' + err.message, 'error');
+                });
+        }
+
+        function sendCloudAlert(level) {
+            const message = prompt('Enter alert message:', 'Tsunami Warning');
+            if (!message) return;
+            
+            fetch('/iot/cloud/alert', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({level: level, message: message})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('Cloud alert set - Level ' + level + ': ' + message, 'success');
+                } else {
+                    addLog('Failed to set cloud alert: ' + data.error, 'error');
+                }
+            })
+            .catch(err => {
+                addLog('Error setting cloud alert: ' + err.message, 'error');
+            });
+        }
+
+        function clearCloudAlert() {
+            fetch('/iot/cloud/clear', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('Cloud alert cleared', 'success');
+                }
+            })
+            .catch(err => {
+                addLog('Error clearing cloud alert: ' + err.message, 'error');
+            });
+        }
+
+        // ========== END PIN CONFIGURATION ==========
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('alertLog');
+            const time = new Date().toLocaleTimeString();
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `
+                <span class="time">${time}</span>
+                <div class="message">${message}</div>
+            `;
+            
+            log.insertBefore(entry, log.firstChild);
+            
+            // Keep only last 50 entries
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('deviceCount').textContent = devices.length;
+            document.getElementById('onlineCount').textContent = devices.filter(d => d.online).length;
+            document.getElementById('alertsSentToday').textContent = alertsSentToday;
+        }
+    </script>
+</body>
+</html>

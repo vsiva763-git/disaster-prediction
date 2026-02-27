@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Tsunami Risk Summary - India EWS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a2a47 50%, #0f2744 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            color: white;
+            font-size: clamp(1.8em, 5vw, 2.4em);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+        }
+
+        .status {
+            color: #94a3b8;
+            font-size: 14px;
+            padding: 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            border-radius: 6px;
+            margin-bottom: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(148, 163, 184, 0.4);
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, transparent);
+            border-radius: 12px 12px 0 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .stat-detail {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(148, 163, 184, 0.4);
+            background: rgba(30, 41, 59, 0.7);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.1);
+        }
+
+        .card h3 {
+            color: #f1f5f9;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        .regions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .region-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .region-card:hover {
+            border-color: rgba(148, 163, 184, 0.4);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.1));
+            transform: translateY(-4px);
+        }
+
+        .region-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 12px;
+        }
+
+        .region-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tag-high {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .tag-moderate {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+        }
+
+        .tag-low {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .event-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .event-item {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .event-item:hover {
+            border-color: rgba(148, 163, 184, 0.4);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.1));
+            transform: translateX(4px);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .event-title {
+            font-weight: 700;
+            color: #f1f5f9;
+            flex: 1;
+        }
+
+        .event-details {
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .event-details span {
+            display: inline-block;
+            margin-right: 16px;
+            margin-bottom: 4px;
+        }
+
+        .event-link {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .event-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            h1 {
+                font-size: 1.6em;
+                text-align: center;
+            }
+
+            .header-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn {
+                flex: 1;
+                min-width: 140px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .regions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .event-header {
+                flex-direction: column;
+            }
+
+            .event-title {
+                margin-bottom: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.3em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .card {
+                padding: 12px;
+            }
+
+            .event-item {
+                padding: 12px;
+            }
+
+            .event-details span {
+                display: block;
+                margin-right: 0;
+                margin-bottom: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Tsunami Risk Summary</h1>
+            <div class="header-buttons">
+                <a href="/" class="btn">🗺️ Full Dashboard</a>
+                <button class="btn" onclick="loadSummary()">🔄 Refresh Live</button>
+                <button class="btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);" onclick="loadTestData()">🧪 Test Data</button>
+            </div>
+        </div>
+
+        <div class="status" id="status">Loading live data...</div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Events (24h)</div>
+                <div class="stat-value" id="totalEvents">-</div>
+                <div class="stat-detail" id="timeRange">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">High Risk Count</div>
+                <div class="stat-value" id="highRisk">-</div>
+                <div class="stat-detail">Probability > 50%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Alerts Triggered</div>
+                <div class="stat-value" id="alerts">-</div>
+                <div class="stat-detail">Model alert threshold</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Max Probability</div>
+                <div class="stat-value" id="maxProb">-</div>
+                <div class="stat-detail">Highest tsunami risk</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🌊 Regional Risk Status</h3>
+            <div class="regions-grid">
+                <div class="region-card">
+                    <div class="region-name">Arabian Sea</div>
+                    <div class="region-status" id="arabianStatus">
+                        <span class="tag tag-low">LOW</span>
+                    </div>
+                </div>
+                <div class="region-card">
+                    <div class="region-name">Bay of Bengal</div>
+                    <div class="region-status" id="bengalStatus">
+                        <span class="tag tag-low">LOW</span>
+                    </div>
+                </div>
+                <div class="region-card">
+                    <div class="region-name">Andaman Sea</div>
+                    <div class="region-status" id="andamanStatus">
+                        <span class="tag tag-low">LOW</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>⚠️ Top Risk Events</h3>
+            <ul class="event-list" id="eventList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const regions = {
+            arabian: { name: 'Arabian Sea', latMin: 8, latMax: 25, lngMin: 50, lngMax: 77 },
+            bengal: { name: 'Bay of Bengal', latMin: 5, latMax: 22, lngMin: 80, lngMax: 98 },
+            andaman: { name: 'Andaman Sea', latMin: 4, latMax: 14, lngMin: 92, lngMax: 100 }
+        };
+
+        async function loadSummary() {
+            console.log('loadSummary() called at:', new Date().toLocaleString());
+            const statusEl = document.getElementById('status');
+            console.log('statusEl:', statusEl);
+            try {
+                const resp = await fetch('/live-data', { 
+                    cache: 'no-cache', 
+                    headers: { 'Cache-Control': 'no-cache' } 
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                console.log('Received data:', data);
+                if (!data.success) throw new Error(data.message || data.error || 'Failed to load');
+                
+                document.getElementById('totalEvents').textContent = data.total_earthquakes || 0;
+                document.getElementById('highRisk').textContent = data.high_risk_count || 0;
+                document.getElementById('alerts').textContent = data.alerts_triggered || 0;
+                document.getElementById('timeRange').textContent = `${data.time_range.start} → ${data.time_range.end}`;
+
+                const earthquakes = data.earthquakes || [];
+                const maxProb = earthquakes.length > 0 
+                    ? Math.max(...earthquakes.map(e => e.tsunami_probability || 0)) * 100
+                    : 0;
+                document.getElementById('maxProb').textContent = maxProb.toFixed(1) + '%';
+
+                // Regional analysis
+                const regionRisks = {
+                    arabian: { maxRisk: 'LOW', count: 0, maxProb: 0 },
+                    bengal: { maxRisk: 'LOW', count: 0, maxProb: 0 },
+                    andaman: { maxRisk: 'LOW', count: 0, maxProb: 0 }
+                };
+
+                earthquakes.forEach(eq => {
+                    const prob = eq.tsunami_probability || 0;
+                    const risk = eq.tsunami_risk || 'LOW';
+
+                    Object.entries(regions).forEach(([key, region]) => {
+                        if (
+                            eq.latitude >= region.latMin && eq.latitude <= region.latMax &&
+                            eq.longitude >= region.lngMin && eq.longitude <= region.lngMax
+                        ) {
+                            regionRisks[key].count++;
+                            if (prob > regionRisks[key].maxProb) {
+                                regionRisks[key].maxProb = prob;
+                                regionRisks[key].maxRisk = risk;
+                            }
+                        }
+                    });
+                });
+
+                updateRegionDisplay(regionRisks);
+
+                // Event list
+                const list = document.getElementById('eventList');
+                list.innerHTML = '';
+
+                const sorted = [...earthquakes].sort((a, b) => 
+                    (b.tsunami_probability || 0) - (a.tsunami_probability || 0)
+                );
+                const top = sorted.slice(0, 5);
+
+                if (top.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌊</div><div>No recent earthquakes detected in the last 24 hours</div></div>';
+                } else {
+                    top.forEach(eq => {
+                        const risk = eq.tsunami_risk || 'LOW';
+                        const prob = eq.tsunami_probability ? (eq.tsunami_probability * 100).toFixed(1) : '0.0';
+                        const tagClass = risk === 'HIGH' ? 'tag-high' : risk === 'MODERATE' ? 'tag-moderate' : 'tag-low';
+                        
+                        const li = document.createElement('li');
+                        li.className = 'event-item';
+                        li.innerHTML = `
+                            <div class="event-header">
+                                <div class="event-title">M${eq.magnitude} — ${eq.location || 'Unknown'}</div>
+                                <span class="tag ${tagClass}">${risk}</span>
+                            </div>
+                            <div class="event-details">
+                                <span>📍 ${eq.latitude?.toFixed(2)}°, ${eq.longitude?.toFixed(2)}°</span>
+                                <span>📏 ${eq.depth} km deep</span>
+                                <span>⚠️ Risk: ${prob}%</span>
+                                <span>🕐 ${new Date(eq.time).toLocaleString()}</span>
+                                ${eq.url ? `<span><a href="${eq.url}" target="_blank" class="event-link">📌 USGS</a></span>` : ''}
+                            </div>
+                        `;
+                        list.appendChild(li);
+                    });
+                }
+
+                // Update status message after all data is loaded
+                statusEl.textContent = `✓ Updated: ${new Date().toLocaleString()}`;
+                console.log('Status updated to:', statusEl.textContent);
+                
+            } catch (err) {
+                console.error('Error in loadSummary:', err);
+                statusEl.textContent = `✗ Error: ${err.message}`;
+            }
+        }
+
+        function updateRegionDisplay(regionRisks) {
+            const regionElements = {
+                arabian: document.getElementById('arabianStatus'),
+                bengal: document.getElementById('bengalStatus'),
+                andaman: document.getElementById('andamanStatus')
+            };
+
+            Object.entries(regionRisks).forEach(([key, risk]) => {
+                const tagClass = risk.maxRisk === 'HIGH' ? 'tag-high' : 
+                                 risk.maxRisk === 'MODERATE' ? 'tag-moderate' : 'tag-low';
+                regionElements[key].innerHTML = `
+                    <span class="tag ${tagClass}">${risk.maxRisk}</span>
+                    ${risk.count > 0 ? `<span style="color: #94a3b8; font-size: 13px;">${risk.count} event${risk.count > 1 ? 's' : ''}</span>` : ''}
+                `;
+            });
+        }
+
+        // Load on page ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadSummary);
+        } else {
+            // Page already loaded (from cache)
+            loadSummary();
+        }
+
+        async function loadTestData() {
+            const statusEl = document.getElementById('status');
+            try {
+                const resp = await fetch('/test-data', { 
+                    cache: 'no-cache', 
+                    headers: { 'Cache-Control': 'no-cache' } 
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message || data.error || 'Failed to load');
+
+                statusEl.textContent = `🧪 Test Data Loaded - Updated: ${new Date().toLocaleString()}`;
+                
+                document.getElementById('totalEvents').textContent = data.total_earthquakes || 0;
+                document.getElementById('highRisk').textContent = data.high_risk_count || 0;
+                document.getElementById('alerts').textContent = data.alerts_triggered || 0;
+                document.getElementById('timeRange').textContent = `${data.time_range.start.substring(0, 10)} → ${data.time_range.end.substring(0, 10)}`;
+
+                const earthquakes = data.earthquakes || [];
+                const maxProb = earthquakes.length > 0 
+                    ? Math.max(...earthquakes.map(e => e.tsunami_probability || 0)) * 100
+                    : 0;
+                document.getElementById('maxProb').textContent = maxProb.toFixed(1) + '%';
+
+                // Regional analysis
+                const regionRisks = {
+                    arabian: { maxRisk: 'LOW', count: 0, maxProb: 0 },
+                    bengal: { maxRisk: 'LOW', count: 0, maxProb: 0 },
+                    andaman: { maxRisk: 'LOW', count: 0, maxProb: 0 }
+                };
+
+                earthquakes.forEach(eq => {
+                    const prob = eq.tsunami_probability || 0;
+                    const risk = eq.tsunami_risk || 'LOW';
+
+                    Object.entries(regions).forEach(([key, region]) => {
+                        if (
+                            eq.latitude >= region.latMin && eq.latitude <= region.latMax &&
+                            eq.longitude >= region.lngMin && eq.longitude <= region.lngMax
+                        ) {
+                            regionRisks[key].count++;
+                            if (prob > regionRisks[key].maxProb) {
+                                regionRisks[key].maxProb = prob;
+                                regionRisks[key].maxRisk = risk;
+                            }
+                        }
+                    });
+                });
+
+                updateRegionDisplay(regionRisks);
+
+                // Event list
+                const list = document.getElementById('eventList');
+                list.innerHTML = '';
+
+                const sorted = [...earthquakes].sort((a, b) => 
+                    (b.tsunami_probability || 0) - (a.tsunami_probability || 0)
+                );
+                const top = sorted.slice(0, 5);
+
+                if (top.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌊</div><div>No recent earthquakes detected</div></div>';
+                } else {
+                    top.forEach(eq => {
+                        const risk = eq.tsunami_risk || 'LOW';
+                        const prob = eq.tsunami_probability ? (eq.tsunami_probability * 100).toFixed(1) : '0.0';
+                        const tagClass = risk === 'HIGH' ? 'tag-high' : risk === 'MODERATE' ? 'tag-moderate' : 'tag-low';
+                        
+                        const li = document.createElement('li');
+                        li.className = 'event-item';
+                        li.innerHTML = `
+                            <div class="event-header">
+                                <div class="event-title">M${eq.magnitude} — ${eq.location || 'Unknown'}</div>
+                                <span class="tag ${tagClass}">${risk}</span>
+                            </div>
+                            <div class="event-details">
+                                <span>📍 ${eq.latitude?.toFixed(2)}°, ${eq.longitude?.toFixed(2)}°</span>
+                                <span>📏 ${eq.depth} km deep</span>
+                                <span>⚠️ Risk: ${prob}%</span>
+                                <span>🕐 ${new Date(eq.time).toLocaleString()}</span>
+                                ${eq.url ? `<span><a href="${eq.url}" target="_blank" class="event-link">📌 USGS</a></span>` : ''}
+                            </div>
+                        `;
+                        list.appendChild(li);
+                    });
+                }
+
+                statusEl.textContent = `🧪 Test Data - Updated: ${new Date().toLocaleString()}`;
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = `✗ Error: ${err.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

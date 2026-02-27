@@ -1,0 +1,143 @@
+# Tsunami Early Warning System Configuration
+
+# API Endpoints
+apis:
+  usgs_earthquake:
+    base_url: "https://earthquake.usgs.gov/fdsnws/event/1/query"
+    format: "geojson"
+    min_magnitude: 5.5
+    region:
+      min_latitude: -20
+      max_latitude: 30
+      min_longitude: 40
+      max_longitude: 110
+    lookback_hours: 24
+    
+  noaa_tides:
+    base_url: "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
+    product: "water_level"
+    datum: "MLLW"
+    units: "metric"
+    time_zone: "gmt"
+    format: "json"
+    application: "tsunami_warning"
+    
+  noaa_buoys:
+    base_url: "https://www.ndbc.noaa.gov/data/realtime2/"
+    stations:
+      - "23001"  # Arabian Sea
+      - "23009"  # Bay of Bengal
+    parameters:
+      - "wave_height"
+      - "wave_period"
+      - "wave_direction"
+      
+  incois:
+    base_url: "https://incois.gov.in/tsunami"
+    advisory_endpoint: "/advisories"
+    event_endpoint: "/events"
+
+# India Geographic Boundaries
+india_region:
+  coastline:
+    west_coast:
+      min_lat: 8.0
+      max_lat: 23.0
+      min_lon: 68.0
+      max_lon: 75.0
+    east_coast:
+      min_lat: 8.0
+      max_lat: 22.0
+      min_lon: 80.0
+      max_lon: 90.0
+    andaman_nicobar:
+      min_lat: 6.0
+      max_lat: 14.0
+      min_lon: 92.0
+      max_lon: 94.0
+  critical_radius_km: 3000
+  
+# Model Configuration
+model:
+  architecture:
+    cnn_filters: [64, 128, 256]
+    cnn_kernel_size: [3, 3, 3]
+    lstm_units: [128, 64]
+    dense_units: [64, 32]
+    dropout_rate: 0.3
+    
+  training:
+    batch_size: 32
+    epochs: 100
+    validation_split: 0.2
+    learning_rate: 0.001
+    early_stopping_patience: 15
+    reduce_lr_patience: 7
+    
+  input_features:
+    earthquake:
+      - magnitude
+      - depth
+      - latitude
+      - longitude
+    ocean:
+      - sea_level_anomaly
+      - wave_height
+      - wave_period
+    spatial:
+      - bathymetry
+      - distance_to_coast
+    temporal_window: 72  # hours
+    
+  thresholds:
+    high_risk: 0.75
+    medium_risk: 0.50
+    low_risk: 0.25
+
+# Data Sources
+data:
+  global_tsunami_db: "https://www.ngdc.noaa.gov/hazel/view/hazards/tsunami/event-data"
+  bathymetry: "https://www.gebco.net/data_and_products/gridded_bathymetry_data/"
+  historical_earthquakes: "https://earthquake.usgs.gov/fdsnws/event/1/query"
+  
+# System Settings
+system:
+  inference_interval_seconds: 300  # 5 minutes
+  data_cache_hours: 24
+  max_api_retries: 3
+  api_timeout_seconds: 30
+  log_level: "INFO"
+  
+# Web Dashboard
+dashboard:
+  refresh_interval_ms: 30000  # 30 seconds
+  max_events_display: 50
+  map_center: [12.0, 80.0]  # Center of India
+  map_zoom: 5
+  
+# Alert System
+alerts:
+  levels:
+    critical:
+      threshold: 0.75
+      color: "#FF0000"
+      message: "CRITICAL TSUNAMI THREAT"
+    high:
+      threshold: 0.50
+      color: "#FF6600"
+      message: "HIGH TSUNAMI RISK"
+    moderate:
+      threshold: 0.25
+      color: "#FFCC00"
+      message: "MODERATE TSUNAMI WATCH"
+    low:
+      threshold: 0.0
+      color: "#00CC00"
+      message: "LOW OR NO RISK"
+      
+# Paths
+paths:
+  models: "models/"
+  data: "data/"
+  logs: "logs/"
+  cache: "data/cache/"

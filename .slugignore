@@ -1,0 +1,15 @@
+*.pyc
+__pycache__/
+*.log
+.git/
+.gitignore
+.vscode/
+.idea/
+*.md
+!README.md
+!DEPLOYMENT.md
+tests/
+docs/
+examples/
+*.ipynb
+.DS_Store

@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>India Tsunami Early Warning System - Live Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a2a47 50%, #0f2744 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            color: white;
+            font-size: clamp(1.8em, 5vw, 2.8em);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .summary-link {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .summary-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+        }
+
+        .controls {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            color: #cbd5e1;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .dashboard > .panel:first-child {
+            grid-column: 1 / -1;
+        }
+
+        .panel {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .panel:hover {
+            border-color: rgba(148, 163, 184, 0.4);
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(59, 130, 246, 0.15);
+        }
+
+        .panel:hover::before {
+            opacity: 1;
+        }
+
+        .panel h2 {
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 15px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .wave-container {
+            height: 220px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        canvas {
+            border-radius: 12px;
+        }
+
+        .wave-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .wave-max {
+            font-weight: 700;
+            font-size: 16px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status {
+            color: #cbd5e1;
+            font-style: italic;
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            border-radius: 6px;
+        }
+
+        .earthquake-list {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .earthquake-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .earthquake-list::-webkit-scrollbar-track {
+            background: rgba(148, 163, 184, 0.1);
+            border-radius: 10px;
+        }
+
+        .earthquake-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 10px;
+        }
+
+        .earthquake-item {
+            padding: 16px;
+            border-left: 4px solid #3b82f6;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05));
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .earthquake-item:hover {
+            border-color: rgba(148, 163, 184, 0.4);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.1));
+            transform: translateX(6px);
+        }
+
+        .earthquake-item.high-risk {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+        }
+
+        .earthquake-item.moderate-risk {
+            border-left-color: #f97316;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
+        }
+
+        .earthquake-item.low-risk {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+        }
+
+        .earthquake-item strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #f1f5f9;
+        }
+
+        .earthquake-item small {
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 4px;
+            line-height: 1.6;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .risk-high {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .risk-moderate {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+        }
+
+        .risk-low {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .region-risk {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            h1 {
+                font-size: 1.6em;
+                text-align: center;
+            }
+
+            .summary-link {
+                width: 100%;
+                text-align: center;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            #map {
+                height: 400px;
+            }
+
+            .wave-container {
+                height: 180px;
+            }
+
+            .legend {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .earthquake-list {
+                max-height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.3em;
+            }
+
+            .panel {
+                padding: 12px;
+            }
+
+            .legend {
+                grid-template-columns: 1fr;
+            }
+
+            .wave-container {
+                height: 150px;
+            }
+
+            #map {
+                height: 300px;
+            }
+
+            .earthquake-item {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 India Tsunami Early Warning System</h1>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="/summary" class="summary-link">📊 View Summary</a>
+                <a href="/iot" class="summary-link" style="background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);">📡 IoT Alert System</a>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="loadLiveData()">🔄 Refresh Data</button>
+            <label class="checkbox-label">
+                <input type="checkbox" id="autoRefresh" checked>
+                Auto-refresh every 30s
+            </label>
+        </div>
+
+        <div class="dashboard">
+            <div class="panel" style="grid-column: span 2;">
+                <h2>🗺️ Indian Ocean Seismic Activity Map</h2>
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #3498db;"></span>
+                        <span>Arabian Sea</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #2ecc71;"></span>
+                        <span>Bay of Bengal</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #9b59b6;"></span>
+                        <span>Indian Ocean</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #e67e22;"></span>
+                        <span>Andaman Sea</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #1abc9c;"></span>
+                        <span>Lakshadweep Sea</span>
+                    </div>
+                </div>
+                <div style="padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px; margin-top: 12px; font-size: 13px; color: #cbd5e1;">
+                    <strong>🌐 Data Sources:</strong> Earthquakes from <strong>USGS real-time API</strong> ✓ | Water levels attempt <strong>IOC stations + NOAA buoys</strong> (real when available, realistic simulation as fallback) | Tsunami predictions from <strong>AI model</strong>
+                </div>
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="panel">
+                <h2>🌊 Arabian Sea Water Levels</h2>
+                <div class="wave-header">
+                    <div class="region-risk" id="arabianRisk">Risk: <span class="risk-badge risk-low">LOW</span></div>
+                    <div class="wave-max" id="arabianWave">Loading...</div>
+                </div>
+                <div class="wave-container">
+                    <canvas id="waveChart1"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🌊 Bay of Bengal Water Levels</h2>
+                <div class="wave-header">
+                    <div class="region-risk" id="bengalRisk">Risk: <span class="risk-badge risk-low">LOW</span></div>
+                    <div class="wave-max" id="bengalWave">Loading...</div>
+                </div>
+                <div class="wave-container">
+                    <canvas id="waveChart2"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🌊 Andaman Sea Water Levels</h2>
+                <div class="wave-header">
+                    <div class="region-risk" id="andamanRisk">Risk: <span class="risk-badge risk-low">LOW</span></div>
+                    <div class="wave-max" id="andamanWave">Loading...</div>
+                </div>
+                <div class="wave-container">
+                    <canvas id="waveChart3"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="panel">
+                <h2>📊 Recent Earthquake Activity & Predictions</h2>
+                <div class="status" id="status">Loading live data...</div>
+                <div class="earthquake-list" id="earthquakeList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        let map;
+        let earthquakeMarkers = [];
+        let waveCharts = [];
+        let waveData = [[], [], []];
+        let maxWaves = [8.0, 8.0, 8.0];
+        let waveDataSource = ['Loading...', 'Loading...', 'Loading...'];
+        let timeStep = 0;
+        let autoRefreshInterval;
+
+        // Region boundaries for risk calculation
+        const regions = {
+            arabian: { name: 'Arabian Sea', latMin: 8, latMax: 25, lngMin: 50, lngMax: 77 },
+            bengal: { name: 'Bay of Bengal', latMin: 5, latMax: 22, lngMin: 80, lngMax: 98 },
+            andaman: { name: 'Andaman Sea', latMin: 4, latMax: 14, lngMin: 92, lngMax: 100 }
+        };
+
+        // Initialize Map
+        function initMap() {
+            map = L.map('map').setView([10, 80], 5);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            L.marker([20.5937, 78.9629]).addTo(map)
+                .bindPopup('<b>India</b><br>Monitoring Center')
+                .openPopup();
+
+            const seaRegions = [
+                { name: 'Arabian Sea', lat: 15, lng: 65, radius: 400000, color: '#3498db' },
+                { name: 'Bay of Bengal', lat: 15, lng: 88, radius: 400000, color: '#2ecc71' },
+                { name: 'Indian Ocean', lat: -10, lng: 75, radius: 600000, color: '#9b59b6' },
+                { name: 'Andaman Sea', lat: 10, lng: 95, radius: 300000, color: '#e67e22' },
+                { name: 'Lakshadweep Sea', lat: 10, lng: 72, radius: 200000, color: '#1abc9c' }
+            ];
+
+            seaRegions.forEach(region => {
+                L.circle([region.lat, region.lng], {
+                    color: region.color,
+                    fillColor: region.color,
+                    fillOpacity: 0.1,
+                    radius: region.radius
+                }).addTo(map).bindPopup(`<b>${region.name}</b><br>Monitoring Zone`);
+
+                L.marker([region.lat, region.lng], {
+                    icon: L.divIcon({
+                        className: 'sea-label',
+                        html: `<div style="background: white; padding: 5px; border-radius: 5px; font-weight: bold; color: ${region.color};">${region.name}</div>`,
+                        iconSize: [120, 30]
+                    })
+                }).addTo(map);
+            });
+        }
+
+        // Initialize Wave Charts
+        function initWaveCharts() {
+            const chartConfig = (label, color) => ({
+                type: 'line',
+                data: {
+                    labels: Array(50).fill(''),
+                    datasets: [{
+                        label: label,
+                        data: [],
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: 'Water Level (m)',
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            display: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Water Level: ' + context.parsed.y.toFixed(2) + 'm';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            waveCharts[0] = new Chart(document.getElementById('waveChart1').getContext('2d'), chartConfig('Arabian Sea Water Level', '#3498db'));
+            waveCharts[1] = new Chart(document.getElementById('waveChart2').getContext('2d'), chartConfig('Bay of Bengal Water Level', '#2ecc71'));
+            waveCharts[2] = new Chart(document.getElementById('waveChart3').getContext('2d'), chartConfig('Andaman Sea Water Level', '#e67e22'));
+
+            // Initialize with empty data
+            for (let i = 0; i < 3; i++) {
+                waveData[i] = Array(50).fill(0);
+            }
+
+            loadWaveData();
+            setInterval(loadWaveData, 60000); // Refresh every minute
+        }
+
+        // Load real wave data from API
+        async function loadWaveData() {
+            try {
+                const response = await fetch('/wave-data', {
+                    cache: 'no-cache',
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (data.success && data.wave_data) {
+                    const regions = ['arabian', 'bengal', 'andaman'];
+                    const waveIds = ['arabianWave', 'bengalWave', 'andamanWave'];
+                    
+                    regions.forEach((region, idx) => {
+                        const regionData = data.wave_data[region];
+                        if (regionData && regionData.stations.length > 0) {
+                            // Get the first station's readings
+                            const station = regionData.stations[0];
+                            const readings = station.readings || [];
+                            
+                            // Update chart with real data
+                            if (readings.length > 0) {
+                                // Take last 50 readings or pad with previous data
+                                const newData = readings.map(r => r.value);
+                                
+                                // Update wave data array
+                                if (newData.length >= 50) {
+                                    waveData[idx] = newData.slice(-50);
+                                } else {
+                                    // Keep old data and append new
+                                    waveData[idx] = [...waveData[idx].slice(newData.length), ...newData];
+                                }
+                                
+                                // Calculate max wave height
+                                maxWaves[idx] = Math.max(...waveData[idx]);
+                                
+                                // Update display
+                                document.getElementById(waveIds[idx]).textContent = 
+                                    `Max: ${maxWaves[idx].toFixed(2)}m | ${station.source}`;
+                                
+                                // Set data source indicator
+                                waveDataSource[idx] = station.real_data ? '🟢 Real-time' : '🟡 Simulated';
+                                
+                                // Update chart
+                                waveCharts[idx].data.datasets[0].data = waveData[idx];
+                                waveCharts[idx].update('none'); // No animation for real-time updates
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading wave data:', error);
+                // Fallback to animated display if API fails
+                updateWavesAnimated();
+            }
+        }
+
+        // Fallback animated wave patterns (used if real data unavailable)
+        function updateWavesAnimated() {
+            timeStep += 0.05;
+            const waveIds = ['arabianWave', 'bengalWave', 'andamanWave'];
+            const waveProfiles = [
+                { base: 4.5, amplitude: 3.2, freq: 0.18, drift: 0.4, noise: 0.6 },
+                { base: 5.0, amplitude: 2.6, freq: 0.22, drift: 0.6, noise: 0.4 },
+                { base: 4.2, amplitude: 3.8, freq: 0.16, drift: 0.3, noise: 0.7 }
+            ];
+
+            for (let i = 0; i < 3; i++) {
+                waveData[i].shift();
+                const profile = waveProfiles[i];
+                const phase = timeStep * (1 + profile.freq) + i * 0.8;
+                const trend = Math.sin(timeStep * 0.2 + i * 0.4) * profile.drift;
+                const noise = (Math.random() - 0.5) * profile.noise;
+                const newWave = profile.base + profile.amplitude * Math.sin(phase) + trend + noise;
+                waveData[i].push(newWave);
+
+                if (newWave > maxWaves[i]) {
+                    maxWaves[i] = newWave;
+                }
+
+                document.getElementById(waveIds[i]).textContent = 
+                    `Max: ${maxWaves[i].toFixed(2)}m | 🟡 Animated`;
+                waveCharts[i].data.datasets[0].data = waveData[i];
+                waveCharts[i].update('none');
+            }
+
+            requestAnimationFrame(updateWavesAnimated);
+        }
+
+        // Load Live Data
+        async function loadLiveData() {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = 'Loading live earthquake data...';
+
+            try {
+                const response = await fetch('/live-data', {
+                    cache: 'no-cache',
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayEarthquakes(data.earthquakes);
+                    statusEl.textContent = `Last updated: ${new Date().toLocaleString()} - ${data.earthquakes.length} events found`;
+                } else {
+                    statusEl.textContent = 'Error loading data: ' + (data.message || data.error || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('Error fetching live data:', error);
+                statusEl.textContent = `Error: ${error.message}. Please refresh (Ctrl+Shift+R)`;
+            }
+        }
+
+        // Display Earthquakes
+        function displayEarthquakes(earthquakes) {
+            earthquakeMarkers.forEach(marker => map.removeLayer(marker));
+            earthquakeMarkers = [];
+
+            const listEl = document.getElementById('earthquakeList');
+            listEl.innerHTML = '';
+
+            const regionRisks = {
+                arabian: { maxRisk: 'LOW', count: 0, maxProb: 0 },
+                bengal: { maxRisk: 'LOW', count: 0, maxProb: 0 },
+                andaman: { maxRisk: 'LOW', count: 0, maxProb: 0 }
+            };
+
+            if (earthquakes.length === 0) {
+                listEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">No recent earthquakes detected in the Indian Ocean region</div>';
+                updateRegionRiskDisplay(regionRisks);
+                return;
+            }
+
+            earthquakes.forEach(eq => {
+                const riskLevel = eq.tsunami_risk || 'LOW';
+                const probability = eq.tsunami_probability || 0;
+
+                // Region impact (simple bounding box)
+                Object.entries(regions).forEach(([key, region]) => {
+                    if (
+                        eq.latitude >= region.latMin && eq.latitude <= region.latMax &&
+                        eq.longitude >= region.lngMin && eq.longitude <= region.lngMax
+                    ) {
+                        regionRisks[key].count++;
+                        if (probability > regionRisks[key].maxProb) {
+                            regionRisks[key].maxProb = probability;
+                            regionRisks[key].maxRisk = riskLevel;
+                        }
+                    }
+                });
+
+                const markerColor = riskLevel === 'HIGH' ? '#e74c3c' : riskLevel === 'MODERATE' ? '#f39c12' : '#27ae60';
+
+                const marker = L.circleMarker([eq.latitude, eq.longitude], {
+                    radius: Math.min(eq.magnitude * 2, 20),
+                    fillColor: markerColor,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.7
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <b>Magnitude ${eq.magnitude}</b><br>
+                    Depth: ${eq.depth}km<br>
+                    Location: ${eq.location}<br>
+                    Time: ${new Date(eq.time).toLocaleString()}<br>
+                    <b>Tsunami Risk: ${(probability * 100).toFixed(1)}%</b><br>
+                    <b style="color: ${markerColor}">${riskLevel} RISK</b>
+                `);
+
+                earthquakeMarkers.push(marker);
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `earthquake-item ${riskLevel.toLowerCase()}-risk`;
+                itemDiv.innerHTML = `
+                    <strong>M${eq.magnitude} - ${eq.location}</strong>
+                    <span class="risk-badge risk-${riskLevel.toLowerCase()}">${riskLevel} RISK</span>
+                    <br>
+                    <small>
+                        📍 ${eq.latitude.toFixed(2)}°, ${eq.longitude.toFixed(2)}° |
+                        📏 Depth: ${eq.depth}km |
+                        🕐 ${new Date(eq.time).toLocaleString()}
+                    </small>
+                    <br>
+                    <small><b>Tsunami Probability: ${(probability * 100).toFixed(1)}%</b></small>
+                `;
+                listEl.appendChild(itemDiv);
+            });
+
+            updateRegionRiskDisplay(regionRisks);
+        }
+
+        // Update region risk display
+        function updateRegionRiskDisplay(regionRisks) {
+            const riskElements = {
+                arabian: document.getElementById('arabianRisk'),
+                bengal: document.getElementById('bengalRisk'),
+                andaman: document.getElementById('andamanRisk')
+            };
+
+            Object.entries(regionRisks).forEach(([key, risk]) => {
+                const riskClass = risk.maxRisk.toLowerCase();
+                riskElements[key].innerHTML = `
+                    Risk: <span class="risk-badge risk-${riskClass}">${risk.maxRisk}</span>
+                    ${risk.count > 0 ? `<small style="color: #666;"> (${risk.count} event${risk.count > 1 ? 's' : ''})</small>` : ''}
+                `;
+                // Also update summary tab
+                const summaryId = key === 'arabian' ? 'arabianRiskSummary' : key === 'bengal' ? 'bengalRiskSummary' : 'andamanRiskSummary';
+                const summaryEl = document.getElementById(summaryId);
+                if (summaryEl) {
+                    summaryEl.innerHTML = `Risk: <span class="risk-badge risk-${riskClass}">${risk.maxRisk}</span>
+                    ${risk.count > 0 ? `<small style="color: #666;"> (${risk.count} event${risk.count > 1 ? 's' : ''})</small>` : ''}`;
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            initWaveCharts();
+            loadLiveData();
+
+            const autoRefreshCheckbox = document.getElementById('autoRefresh');
+            autoRefreshCheckbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    autoRefreshInterval = setInterval(loadLiveData, 30000);
+                } else {
+                    clearInterval(autoRefreshInterval);
+                }
+            });
+
+            autoRefreshInterval = setInterval(loadLiveData, 30000);
+        });
+    </script>
+</body>
+</html>
