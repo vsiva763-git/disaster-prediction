@@ -4,7 +4,7 @@ Flask API for Tsunami Detection Model
 REST API endpoint for real-time tsunami prediction
 """
 
-from flask import Flask, request, jsonify, send_file, make_response
+from flask import Flask, request, jsonify, send_file, make_response, render_template
 from flask_cors import CORS
 import tensorflow as tf
 import numpy as np
@@ -80,7 +80,7 @@ def health():
 def serve_dashboard():
     """Serve the live dashboard with Indian Ocean data"""
     try:
-        response = make_response(send_file('templates/index_live.html'))
+        response = make_response(render_template('index_live.html'))
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
@@ -94,7 +94,7 @@ def serve_dashboard():
 def serve_summary():
     """Serve a lightweight summary page"""
     try:
-        response = make_response(send_file('templates/summary.html'))
+        response = make_response(render_template('summary.html'))
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
@@ -108,7 +108,7 @@ def serve_summary():
 def serve_iot_dashboard():
     """Serve the IoT Alert System dashboard"""
     try:
-        response = make_response(send_file('templates/iot_dashboard.html'))
+        response = make_response(render_template('iot_dashboard.html'))
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
